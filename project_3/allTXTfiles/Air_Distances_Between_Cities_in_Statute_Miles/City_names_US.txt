@@ -1,0 +1,28 @@
+Birmingham
+Boston
+Buffalo
+Chicago
+Cleveland
+Dallas
+Denver
+Detroit
+El_Paso
+Houston
+Indianapolis
+Kansas City
+LosAngeles
+Louisville
+Memphis
+Miami
+Minneapolis
+New Orleans
+New_York
+Omaha
+Philadelphia
+Phoenix
+Pittsburgh
+St_Louis
+Salt_Lake_City
+San_Francisco
+Seattle
+Washington

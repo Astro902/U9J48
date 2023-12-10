@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
+  <title>Document</title>
+</head>
+<body>
+  <ul class="nav-bar">
+    <li><a href="#label1">Exercise 1</a></li>
+    <li><a href="#label2">Exercise 2</a></li>
+    <li><a href="#label3">Exercise 3</a></li>
+    <li><a href="#label4">Exercise 4</a></li>
+  </ul>
+  <div class="header master">Αναγνώριση Προτύπων</div>
+  <div class="header">Εργασία 3</div>
+  <div class="container">
+    <div class="label" id="label1"><span>Άσκηση 1</span></div>
+    <div class="part1-1">
+      Για το dataset που μας δόθηκε βρίσκουμε τους πίνακες αποστάσεων(dataFrames) για ευκλείδεια και cosine μετρική.
+      Είναι συμμετρικές ως προς τη διαγώνιο η οποία είναι γεμάτη zeros (Διαστασεις πίνακα <span class="underline">[210 rows x 210 columns]</span>).
+      Θεωρούμε υποπίνακα 1-2 <span class="underline">[:70, 70:140]</span> ο οποίος μας δείχνει τις ευκλείδειες αποστάσεις (ή cosine αντίστοιχα) μεταξύ της κλάσης 1 και 2.
+      Αντίστοιχα αυτό ισχύει για τους υποπίνακες 1-3 <span class="underline">[:70, 140:210]</span> και 2-3 <span class="underline">[70:140, 140:210]</span>.
+      Για να βρούμε ποιες κλάσεις είναι ευκολότερα διαχωρίσιμες, παίρνουμε από
+      κάθε υποπίνακα τις 10 πιο μικρές αποστάσεις μεταξύ σημείων. Στη συνέχεια απο αυτές με απλή επισκόπηση παρατηρούμε πως ο πίνακας 2-3
+      δίνει τις μεγαλύτερες τιμές, άρα οι κλάσεις 2 και 3 θα είναι πιο μακρυά μεταξυ τους.
+    </div>
+    <div class="part1-2"> <br>
+      Το Silhouette Coefficient είναι ένα νούμερο απο -1 μέχρι 1 το οποίο μας δείχνει πόσο καλά έχει γίνει το clustering. Στη δικιά μας περίπτωση
+      για number of clusters απο <span class="underline">[2:11]</span> βρίσκουμε ο βέλτιστος αριθμός κλάσεων είναι <span class="underline">nClusters = 2</span>.
+      Ωστόσο για <span class="underline">nClusters = 3</span> το Silhouette average είναι αρκετά κοντα στο προηγούμενο (<span class="underline2">0.4924</span> vs <span class="underline2">0.4957</span>).
+      Δικαιολογημένα βρίσκουμε πως θα είναι μεγαλύτερο το Silhouette Coefficient για 2 κλάσεις αφού οι ευκλείδειες αποστάσεις τών κλάσεων 1 και 3 είναι οι πιο μικρές μεταξύ των κλάσεων.
+      Άρα είναι και λογικό να θεωρήσει την 1 και 3 μαζι για <span class="underline">nClusters = 2</span>. Επιπλέον βρίσκουμε πως το Silhouette Coefficient
+      είναι: <span class="underline2">0.4957</span>
+      <img src="../images/noNormSilDiam.png" alt="" class="image image1">
+    </div>
+    <div class="part1-3"> <br>
+      Κανονικοποιούμε τα δεδομένα ετσι ώστε να έχουν μηδενική μέση τιμή και μοναδιαίο variance. Το νέο Silhouette Coefficient για τα normalized δεδομένα με
+      <span class="underline">nClusters = 2</span> (το καλύτερο για τιμές <span class="underline">[2:11]</span>)
+      με cosine μετρική είναι: <span class="underline2">0.64476</span>. Για <span class="underline">nClusters > 2</span> σπάει πολύ.
+      <img src="../images/noNormSilDiamNormCosine.png" alt="" class="image image2"> <br>
+      Εδώ παρατηρούμε πώς είναι αρκετά μεγάλο το Silhouette Coefficient συγκριτικά με το προηγούμενο, ωστόσο αυτό ισχύει για 2 clusters και όχι 3.
+      Σε περίπτωση που αρχίσουμε να ανεβαίνουμε σε αριθμό cluster τότε παρατηρούμε πως ακόμα και για <span class="underline">nClusters = 3</span>
+      η μία (ή παραπάνω απο αυτές) παρουσιάζουν τιμές στο 0 ή κοντά στο -1. Αυτό σημαίνει πως οι κλάσεις κάνουν overlap (τιμές κοντά στο 0) ή τα samples
+      έχουν μεγάλη πιθανότητα να βρίσκονται σε άλλη κλάση (τιμές κοντά στο -1). Εδώ βλέπουμε πως το assumption που καναμε νωρίτερα βγαίνει πραγματικό,
+      όντως οι κλάσεις 1 και 3 είναι κοντά στο υπερεπίπεδο που βρίσκονται.
+    </div>
+    <div class="part1-4"> <br>
+      Το Rand Index χρησιμοποιείται για να μετρήσουμε πόσο μοιάζουν 2 clustering αποτελέσματα, συγκρίνοντας αν τα samples ομαδοποιήθηκαν σωστά ή οχι.
+      Στην περίπτωσή μας, συγκρίνοντας τα σωστά με του cluster, βρίσκουμε πόσο καλή δουλεία έκανε ο cluster. 
+      Ο <span class="underline">KMeans</span> λειτουργεί μόνο με ευκλείδεια απόσταση στην <span class="underline">sklearn</span> , άρα
+      πρώτα δημιουργούμε squared δεδομένα με βάση τα κανονικά μας και έπειτα τα πετάμε στον <span class="underline">KMeans</span>.
+      Επομένως για 3 κλάσεις (<span class="underline">nClusters = 3</span>) με 'squared' Euclidean μετρική υπολογίζουμε mean και variance 
+      <span class="underline2">Mean Rand Index: 0.8267</span> και <span class="underline2">Variance of Rand Index: 0</span>. 
+      Όσον αφορά το variance είναι λογικό να βγαίνει <span class="underline2">0</span>, διότι τα iterations του k-means είναι υπέραρκετά για τα δεδομένα μας,
+      άρα γρήγορα καταλήγει σε σταθερά κέντρα. Σε περίπτωση που βάζαμε μεγάλο στοπ στα iterations, είναι λογικό
+      να αλλάξει τόσο το mean όσο και το variance (>0).
+    </div>
+    <div class="part1-5"> <br>
+      Όπως αναφέραμε και παραπάνω ο <span class="underline">KMeans</span> δουλεύει μόνο με ευκλείδειες αποστάσεις. Ωστόσο μπορούμε να κανονικοποιήσουμε τα
+      τα δεδομένα μας με τέτοιο τρόπο ώστε τα διανύσματα να έχουν μοναδιαίο μήκος πριν του τα δώσουμε. Μαθηματικά αποδεικνύεται πως το αποτέλεσμα είναι σχεδόν το ίδιο.
+      Άρα επαναλαμβάνοντας το προηγούμενο βήμα για 'normalized' δεδομένα έχουμε <span class="underline2">Mean Rand Index: 0.9565</span>. Παρατηρούμε πως τα
+      normalized δεδομένα (άρα και η cosine μετρική) δεν έκανε πολύ καλή δουλειά ως προς την ομαδοποίηση των δεδομένων σε σχέση με την squared ευκλείδεια 
+      (ή ακομα και με απλή ευκλείδεια).
+    </div>
+    <div class="bonus1"> <br>
+      Γενικά ο KNN απαιτεί αρκετούς πόρους για την υλοποίησή του. Ακόμα και από το training phase πρέπει να θυμάται ολόκληρο το dataset. Μετά, για ένα καινούριο δεδομένο
+      προσδιορίζει τι ειναι και στη συνέχεια βρίσκει τους κοντινότερους k γείτονες (και μετα majority voting). Χρησιμοποιώντας πριν απο τον KNN κάποιον αλγόριθμο που
+      θα γκρουπάρει το dataset σε clusters (όπως k-means, hierarchical clustering, DBSCAN) μπορούμε να θεωρήσουμε πως το κέντρο του  κάθε clustering θα εκπροσωπείται
+      από ένα πια σημείο, άρα ο KNN θα είναι πιο ελαφρύς.
+      Για δεδομένα που βρίσκονται σε πάρα πολλές διαστάσεις πολύ χρήσιμο είναι ένας hash table ή ακόμα και Locality-Sensitive Hashing (LSH).
+      Επιπλέον θα μπορούσαμε να μειώσουμε τις διαστάσεις των δεδομένων από πριν χρησιμοποιώντας έναν PCA αλγόριθμο. Ένα δέντρο αποφάσεων θα ήταν εξαιρετικά χρήσιμο,
+      αφού θα μπορούσαμε να βρούμε και να κρατήσουμε τα πιό σημαντικά χαρακτηριστικά. Ή ακόμα να τα χρησιμοποιήσουμε για να κόψουμε την περιοχή που είναι
+      να τρέξει ο KNN.
+    </div>
+  </div>
+  <div class="container container2">
+    <div class="label" id="label2"><span>Άσκηση 2</span></div>
+    <div class="part2-1">
+      Ο αλγόριθμος που επιλέγουμε λέγεται Agglomerative Clustering (AGNES) ο οποίος χρησιμοποιεί την τεχνική της ιεραρχικής ομαδοποίησης.
+      Βασίζεται στην απόσταση (ή ομοιότητα) μεταξύ σημείων. Συνήθως χρησιμοποιεί μετρικές όπως ευκλείδεια απόσταση, manhattan ή σχετική(correlation distance).
+      Στην αρχή θεωρεί
+      το κάθε sample σαν μία ομάδα μόνο του, και στη συνέχεια τα ομαδοποιεί(merge) αναλόγως μερικά κριτήρια σύνδεσης:
+      <br><span class="tab">1.</span> <span class="underline">Single Linkage</span>: Απόσταση μεταξύ των <span class="bold">πλησιέστερων</span> σημείων 2 ομάδων.
+      <br><span class="tab">2.</span> <span class="underline">Complete Linkage</span>: Απόσταση μεταξύ των πιο <span class="bold">απομακρυσμένων</span> σημείων 2 ομάδων.
+      <br><span class="tab">3.</span> <span class="underline">Average Linkage</span>: <span class="bold">Μέση</span> απόσταση μεταξύ όλων των ζευγών σημείων 2 ομάδων.
+      <br><span class="tab">4.</span> <span class="underline">Ward's Method</span>: Ελαχιστοποιεί τη <span class="bold">διακύμανση</span> εντός των ομάδων.
+      <br>Η μορφή αυτή συνήθως αναπαριστάται σαν ένα δενδροδιάγραμμα, το οποίο αντιπροσωπεύει πώς έγινε η ομαδοποίηση. 
+      Εμείς για την υλοποίηση της άσκησης θα χρησιμοποιήσουμε <span class="underline">Average Linkage</span> με απόσταση
+      <span class="underline">Manhattan</span> (ή <span class="underline">City block</span>). Παρακάτω παρουσιάζεται το διάγραμμα:
+    </div>
+    <div class="part2-2">
+      <div class="grid-container">
+        <div class="left-box">
+          <div class="left-box-top">
+            Παρατηρούμε πως στο πρώτο level όλα τα samples έχουν το δικό τους cluster και όσο ανεβαίνουμε αρχίζουν και ενώνονται ως που κάποια στιγμή,
+            θα αρχίσουμε να βλέπουμε τις κλάσεις (τη στιγμή που θα έχουμε 3 γραμμες).
+          </div>
+          <div class="left-box-mid">
+            Το ύψος των κλαδιών δείχνει το πόσο μακρυά (ή κοντά) είναι ενα σημείο, μια ομάδα
+            ή μια υπο-ομάδα.
+          </div>
+          <div class="left-box-bot">
+            Επιπλέον παρατηρούμε ότι οι κλάσεις με χρώματα κόκκινο και πράσινο ενώνονται πιό νωρίς από την πορτοκαλί. Αυτό είναι ένα ακόμα στοιχείο
+            πως όντως 2 κλάσεις (τα κέντρα τους) βρίσκονται πιο κοντά μεταξύ τους σε σχέση με την τρίτη.
+          </div>
+        </div>
+        <div class="right-box">
+          <img src="../images/treeDiagram.png" alt="" class="image3">
+        </div>
+      </div>
+    </div>
+    <div class="part2-3"> <br>
+      Όπως και στην προηγούμενη άσκηση χρησιμοποιούμε τη συνάρτηση <span class="underline">rand_index</span> για να μας δείξει ποιοτικά πόσο καλό έγινε
+      το clustering. Με τις προϋποθέσεις όπως στήθηκε αρχικά ο AGNES,
+      πετυχαίνουμε <span class="underline2">Rand Index: 0.9752</span>.
+      Για να είναι όμως περισσότερο δίκαιο για τον k-means θα χρησιμοποιήσουμε την ευκλείδεια μετρική, άρα <span class="underline2">Rand Index: 0.94</span>.
+      Ίσος όχι για πολύ αλλά η απόσταση Manhattan λειτουργεί εξαιρετικά
+      (<span class="underline2">0.9752</span> vs <span class="underline2">0.94</span>).
+      Παρακάτω είναι ένας πίνακας ο οποίος δίνει το Rand Index για τις αντίστοιχες αλλαγές.
+    </div>
+    <div class="tables-container">
+      <div class="table1">
+        <span>Score Table</span>
+        <div class="table-container">
+          <table class="tg1">
+            <thead>
+              <tr>
+                <th class="tg-0lax"></th>
+                <th class="tg-0lax underline">K-Means</th>
+                <th class="tg-0lax underline">AGNES</th>
+              </tr>
+            </thead>
+          <tbody>
+            <tr>
+              <td class="tg-0lax">Euclidean</td>
+              <td class="tg-0lax underline2">0.9071</td>
+              <td class="tg-0lax underline2">0.94</td>
+            </tr>
+            <tr>
+              <td class="tg-0lax">Squared <br> Euclidean</td>
+              <td class="tg-0lax underline2">0.8267*</td>
+              <td class="tg-0lax underline2">0.94</td>
+            </tr>
+            <tr>
+              <td class="tg-0lax">Manhattan</td>
+              <td class="tg-0lax underline2">-</td>
+              <td class="tg-0lax underline2">0.9752***</td>
+            </tr>
+            <tr>
+              <td class="tg-0lax">Cosine</td>
+              <td class="tg-0lax underline2">0.9565**</td>
+              <td class="tg-0lax underline2">0.7467</td>
+            </tr>
+          </tbody>
+          </table>
+        </div>
+        <span>| Used rand_index function |</span>
+      </div>
+    </div>
+    <div class="post-table-comments">
+      <div>*Υπολογίστηκε αφού όλα τα δεδομένα έγιναν squared</div>
+      <div>**Υπολογίστηκε με normalized δεδομένα που έχουν zero mean, unit variance (ο K-Means παρέμεινε σε ευκλείδεια μετρική)</div>
+      <div>***Κάτι ενδιαφέρον, αν του δώσουμε normalized data και τα περάσουμε από AGNES με manhattan, τότε RI = 0.9874</div>
+    </div> 
+    <div class="part2-4"> <br>
+      Ένα πλεονέκτημα των ιεραρχικών τεχνικών ομαδοποίησης είναι πως δέν χρειάζεται να μαντέψουμε από πριν αριθμό κλάσεων για ένα unsupervised πρόβλημα,
+      που όπως φάνηκε και από τους πίνακες δίνουν τρομερά ακριβή αποτελέσματα. Επιπλέον είναι εξαιρετικός τρόπος να κάνουμε visualize δεδομένα
+      που βρίσκονται σε πολλές διαστάσεις. Με αυτόν τον τρόπο πολύ γρήγορα μπορούμε να αποκτήσουμε γρήγορα πληροφορίες για τις σχέσεις
+      μεταξύ διαφορετικών ομάδων των σημείων των δεδομένων. Αυτό ισχύει όχι μόνο για τις κύριες ομάδες (τον αριθμό των clusters) αλλά και για υπο-ομάδες και για υπο-υπο-ομάδες κτλ.
+      Επίσης είναι αμερόληπτο όσον αφορά το σχήμα, το μέγεθος ή τον αριθμό των ομάδων των δεδομένων.
+      Δεν ξεκινάει δηλαδή να κάνει assumptions απο πριν ως προς αυτά τα χαρακτηριστικά και γενικά προσφέρει μεγάλο flexibility.
+      Και όσον αφορά τους πόρους που μας επιτρέπεται να χρησιμοποιήσουμε, η τεχνικη αυτή λειτουργεί δυναμικά με καινούρια δεδομένα.
+      Δε χρειάζεται δηλαδή, για κάθε καινούριο δεδομένο, να ξαναχτίσει απο την αρχή όλο το δέντρο.
+    </div>
+  </div>
+  <div class="container container3">
+    <div class="label" id="label3"><span>Άσκηση 3</span></div>
+    <div class="part3-1">
+      Ο παρακάτω πίνακας μας εξηγεί πόσα χαρακτηριστικά χρειάζονται για να έχουμε το αντίστοιχο variance του αρχικού dataset.
+      <div class="table2">
+        <table class="tg2">
+          <thead>
+            <tr>
+              <td>Χαρακτηριστικά</td>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tg-0lax">Similarity</td>
+              <td class="tg-0lax underline2">0.7957</td>
+              <td class="tg-0lax underline2">0.9661</td>
+              <td class="tg-0lax underline2">0.9951</td>
+              <td class="tg-0lax underline2">0.9991</td>
+              <td class="tg-0lax underline2">0.9997</td>
+              <td class="tg-0lax underline2">0.9999</td>
+              <td class="tg-0lax underline2">0.9999</td>
+            </tr>
+          </tbody>
+        </table>
+      </div> <br>
+      Επομένως παρατηρούμε πως με μόλις 2 features, χαρακτηρίζουμε τουλάχιστον το 90% του αρχικού variance και με 3 χαρακτηριστικά πάνω απο 99%.
+    </div>
+    <div class="part3-2"> <br>
+      Το σφάλμα ανακατασκευής δίνεται από τον παρακάτω πίνακα:
+      <div class="table3">
+        <table class="tg3">
+          <thead>
+            <tr>
+              <td>Χαρακτηριστικά</td>
+              <td>1</td>
+              <td>2</td>
+              <td>3</td>
+              <td>4</td>
+              <td>5</td>
+              <td>6</td>
+              <td>7</td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="tg-0lax">Error</td>
+              <td class="tg-0lax underline2">7.95726e-01</td>
+              <td class="tg-0lax underline2">1.70356e-01</td>
+              <td class="tg-0lax underline2">2.90096e-02</td>
+              <td class="tg-0lax underline2">3.98304e-03</td>
+              <td class="tg-0lax underline2">6.20590e-04</td>
+              <td class="tg-0lax underline2">1.93994e-04</td>
+              <td class="tg-0lax underline2">1.08153e-04</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      Παρατηρούμε πως για να ανακατασκευάσουμε τα αρχικά δεδομένα το σφάλμα μειώνεται όσο περισσότερα features προσθέτουμε. 
+    </div>
+
+    <div class="part3-3"> <br>
+      Επομένως εφαρμόζουμε τη μέθοδο LDA για τα δεδομένα μας τα οποία απεικονίζονται στα παρακάτω διαγράμματα:
+      <div class="images-box">
+        <div class="box1">
+          <a href="../images/PCA_plot.png" target="_blank"><img src="../images/PCA_plot.png" alt=""></a>
+        </div>
+        <div class="box2">
+          <a href="../images/LDA_plot.png" target="_blank"><img src="../images/LDA_plot.png" alt=""></a>
+        </div>
+      </div>
+      Άρα παρατηρούμε πως ο LDA έκανε τρομερή δουλειά όσον  αφορά τον διαχωρισμό των κλάσεων. Επιπλέον παρατηρούμε ξανά την υπόθεσή μας στο πρώτο και δεύτερο μέρος της εργασίας,
+      ότι όντως οι κλάσεις 2 και 3 είναι απομακρυσμένες και οι 1 με 3 είναι πιο κοντά μεταξύ τους. <br>
+      Παρακάτω παρουσιάζουμε τα LDA coefficients
+      <div class="table4">
+        <span>LDA coefficients</span>
+        <div class="table-container">
+          <table class="tg4">
+            <thead>
+              <tr>
+                <td>Features</td>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+                <td>6</td>
+                <td>7</td>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="tg-0lax">Class 1</td>
+                <td class="tg-0lax underline2">-9.25694</td>
+                <td class="tg-0lax underline2">15.9203</td>
+                <td class="tg-0lax underline">194.694</td>
+                <td class="tg-0lax underline">23.8446</td>
+                <td class="tg-0lax underline3">-1.68141</td>
+                <td class="tg-0lax underline3">-0.696643</td>
+                <td class="tg-0lax underline2">-18.9519</td>
+              </tr>
+              <tr>
+                <td class="tg-0lax">Class 2</td>
+                <td class="tg-0lax underline2">0.985377</td>
+                <td class="tg-0lax underline2">8.0065</td>
+                <td class="tg-0lax underline">-30.1572</td>
+                <td class="tg-0lax underline">-24.9077</td>
+                <td class="tg-0lax underline3">0.539253</td>
+                <td class="tg-0lax underline3">0.0325903</td>
+                <td class="tg-0lax underline2">14.6107</td>
+              </tr>
+              <tr>
+                <td class="tg-0lax">Class 3</td>
+                <td class="tg-0lax underline2">8.27156</td>
+                <td class="tg-0lax underline">-23.9269</td>
+                <td class="tg-0lax underline">-164.53</td>
+                <td class="tg-0lax underline3">1.06314</td>
+                <td class="tg-0lax underline2">1.14216</td>
+                <td class="tg-0lax underline3">0.664053</td>
+                <td class="tg-0lax underline2">4.34125</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <!-- <span></span> -->
+      </div>
+      Ξέροντας όλα τα Coefficient από όλες τις κλάσεις μπορούμε να καταλάβουμε ποια χαρακτηριστικά παίζουν σημαντικότερο ρόλο για την εκάστοτε κλάση.
+      Στη δικιά μας περίπτωση δηλαδή, για την κλάση 1 περισσότερο ρόλο παίζουν τα χαρακτηριστικά 3 και 4 (που είναι με <span class="underline">πράσινο</span> χρώμα). Για την κλάση 2 τα κυριότερα χαρακτηριστικά είναι
+      τα 3 και 4. Σημασία έχει η μεγαλύτερη απόλυτη τιμή. Για την κλάση 3 είναι τα 2 και 3. Αντίστοιχα τα χαρακτηριστικά με <span class="underline3">κόκκινο</span> χρώμα είναι αυτά που κάνουν το λιγότερο contribute.
+      Τα χαρακτηριστικά, δηλαδή που κατα απόλυτη τιμη είναι μικρότερα. <br>
+      Παρακάτω παρουσιάζουμε τα διαγράμματα με τα 2 πιο σημαντικά χαρακτηριστικά και με τα 2 λιγότερο.
+      <div class="images-box">
+        <div class="box1">
+          <a href="../images/bestFeatures.png" target="_blank"><img src="../images/bestFeatures.png" alt=""></a>
+        </div>
+        <div class="box2">
+          <a href="../images/worstFeatures.png" target="_blank"><img src="../images/worstFeatures.png" alt=""></a>
+        </div>
+      </div>
+      Μπορούμε να παρατηρήσουμε πως ο LDA κάνει evaluate το πόσο γραμμικά είναι τα features που εξετάσουμε (σύμφωνα με τα coefficients). Στο διάγραμμα με τα
+      'καλύτερα' features βλέπουμε σαν να έχουν 'απλώσει' οι κλάσεις πάνω σε ευθείες, ενώ στα χειρότερα 2 όχι (και μάλιστα μπλέκονται και πολύ περισσότερο μερικά samples).
+      Σε περίπτωσή που παίρναμε k-means όμως λογικά θα λειτουργούσαν καλύτερα αν παίρναμε ανάποδα τα χαρακτηριστικά (αφού στα 2 'χειρότερα' φαίνεται το scatter να
+      έχει γίνει περισσότερο ακτινικά αντί για γραμμικά).
+    </div>
+  </div>
+  
+  <div class="container container4">
+    <div class="label" id="label4"><span>Άσκηση 4</span></div>
+    <div class="part3-1">
+      Παρατηρούμε πως μπορούμε να σχηματίσουμε τον παγκόσμιο χάρτη. Δεν είναι τέλεια αποτυπωμένος αλλά είναι αρκετό για να καταλάβουμε όπως βλέπουμε το σχήμα.
+      Επιπλέον για 3d αναπαράσταση μπορούμε ακόμα να σχηματίσουμε και ολόκληρο τον κόσμο.
+      <div class="images-box">
+        <div class="box1">
+          <a href="../images/worldCities.png" target="_blank"><img src="../images/worldCities.png" alt=""></a>
+        </div>
+        <div class="box2">
+          <a href="../images/worldCities.png" target="_blank"><img src="../images/worldGlobe.png" alt=""></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="container-lg">
+    <div class="copyrights">© The most chilled section here</div>
+    <div>
+      <div></div>
+      <div>
+        <ul>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+      </div>
+    </div>
+    <div class="yin-yang"></div>
+  </div>
+  <div style="display: none;">231201-7825966</div>
+</body>
+</html>

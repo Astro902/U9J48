@@ -106,5 +106,5 @@ plotWorld = mdsDiagram(dissimilarityMatrix_world)
 # plotUS3d = mdsDiagram3d(dissimilarityMatrix_US)
 plotWorld3d = mdsDiagram3d(dissimilarityMatrix_world)
 
-qwerty = yyt(dissimilarityMatrix_world)
-qwerty = yyt(dissimilarityMatrix_US)
+# qwerty = yyt(dissimilarityMatrix_world)
+# qwerty = yyt(dissimilarityMatrix_US)

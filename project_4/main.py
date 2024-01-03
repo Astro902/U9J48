@@ -8,7 +8,7 @@ from ucimlrepo import fetch_ucirepo
 from sklearn.model_selection import train_test_split
 from sklearn.datasets import fetch_openml
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve, confusion_matrix
+from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve, confusion_matrix, precision_recall_curve, auc
 
 class IrisModel(tf.keras.Model):
   def __init__(self, num_classes):
@@ -70,6 +70,32 @@ def ROCcurveDiagram(X_test, y_test):
   plt.legend()
   plt.show()
 
+def PrecisionRecallCurveDiagram(X_test, y_test, numClasses):
+  probabilities = model.predict(X_test)
+  precision_dict = {}
+  recall_dict = {}
+  pr_auc_dict = {}
+
+  # Plotting Precision-Recall Curve for each class
+  for i in range(numClasses):
+    class_probabilities = probabilities[:, i]
+    precision, recall, _ = precision_recall_curve(y_test == i, class_probabilities)
+    pr_auc = auc(recall, precision)
+    
+    precision_dict[i] = precision
+    recall_dict[i] = recall
+    pr_auc_dict[i] = pr_auc
+
+    plt.plot(recall, precision, label=f'Class {i} AUC = {pr_auc:.2f}')
+
+  plt.xlabel('Recall')
+  plt.ylabel('Precision')
+  plt.title('Precision-Recall Curve')
+  plt.legend()
+  plt.show()
+
+  return precision_dict, recall_dict, pr_auc_dict
+
 numEpochs = 15                                                                                #C We change numEpochs from 10 ---> 15
   
 iris = fetch_ucirepo(id=53)                                                                   # fetch dataset 
@@ -110,3 +136,4 @@ for epoch in range(numEpochs):
 testAcc = testAccDiagram(testAccuracy)
 confMatrix = confusionMatrixDiagram(xTest, yTest)
 ROCcurve = ROCcurveDiagram(xTest, yTest)
+precision_dict, recall_dict, pr_auc_dict = PrecisionRecallCurveDiagram(xTest, yTest, numClasses)

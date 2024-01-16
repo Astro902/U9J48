@@ -1,42 +1,57 @@
-from keras.preprocessing.image import ImageDataGenerator
-from tensorflow import keras
-from keras.layers import Layer, Conv2D, MaxPooling2D, concatenate, Flatten, Dense, Input
-
-import seaborn as sns
+import cv2
+import os
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import precision_score, recall_score, roc_auc_score, confusion_matrix
+import tensorflow as tf
+from keras.models import Model
+from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout, Input, Layer, concatenate, BatchNormalization
+from keras.metrics import Precision, Recall, BinaryAccuracy, AUC
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
+file_dir = 'C:/ProjectIgnis/.py/data/Mask_DB'
 
-import warnings
-warnings.filterwarnings('ignore')
+incdir0 = 'C:/ProjectIgnis/.py/data/Mask_DB/with_mask'
+incdir1 = 'C:/ProjectIgnis/.py/data/Mask_DB/without_mask'
+incdir404 = 'C:/ProjectIgnis/.py/data/mask_incorrect_use'
 
-dataGen = ImageDataGenerator(
-  rescale=1./255,
-)
+data = tf.keras.utils.image_dataset_from_directory(
+  directory=file_dir,                                   # ----------- Reminder ------------ #
+  image_size=(32, 32),                                  # Class0 = WITH Mask                #
+  seed=777,                                             # Class1 = NO Mask                  #  
+  batch_size=32,                                        # CLass404 = Incorrect Use of Mask  #
+  shuffle=True,                                         # --------------------------------- #
+) 
 
-trainGen = dataGen.flow_from_directory(
-  'splitted_dataset/train',
-  target_size=(28, 28),
-  batch_size=32,
-  class_mode='binary',  # 'binary' for two classes, 'categorical' for more
-)
-validGen = dataGen.flow_from_directory(
-  'splitted_dataset/validation',
-  target_size=(28, 28),
-  batch_size=32,
-  class_mode='binary',  # 'binary' for two classes, 'categorical' for more
-)
-testGen = dataGen.flow_from_directory(
-  'splitted_dataset/test',
-  target_size=(28, 28),
-  batch_size=32,
-  class_mode='binary',  # 'binary' for two classes, 'categorical' for more
-)
+def loadData(dataDir):
+  data = tf.keras.utils.image_dataset_from_directory(
+    directory=dataDir,
+    labels=None,
+    image_size=(32, 32),
+    batch_size=32,
+    shuffle=False,
+  )
+  data = data.map(lambda x: (x/255))
+  data.as_numpy_iterator()
+  TestData = data.take(len(data))
+  return TestData
 
-# print(trainGen.image_shape)
-# print(validGen.image_shape)
-# print(testGen.image_shape)
+data = data.map(lambda x,y: (x/255, y))
+data.as_numpy_iterator()
+
+train_size = round(len(data) * .6)
+val_size = round(len(data) * .2)
+test_size = round(len(data) * .2)
+
+while train_size + val_size + test_size < len(data):
+  train_size += 1
+
+while train_size + val_size + test_size > len(data):
+  train_size -= 1
+  
+train = data.take(train_size)
+val = data.skip(train_size).take(val_size)
+test = data.skip(train_size + val_size).take(test_size)
 
 class InceptionBlock(Layer):
   def __init__(self, filters_1x1, filters_3x3_reduce, filters_3x3, filters_5x5_reduce, filters_5x5, filters_pool_proj):
@@ -72,74 +87,127 @@ class InceptionBlock(Layer):
     
     return concatenate([branch1, branch2, branch3, branch4], axis=-1)
 
-class MyModel(keras.Model):
+class MyModel(Model):
   def __init__(self):
     super(MyModel, self).__init__()
 
-    self.conv7x7 = Conv2D(filters=64, kernel_size=7, strides=2, padding='same')
+    self.conv5x5_1 = Conv2D(filters=32, kernel_size=5, strides=1, padding='same')
+    self.conv3x3_2 = Conv2D(filters=64, kernel_size=3, strides=1, padding='same')
+    self.conv3x3_3 = Conv2D(filters=128, kernel_size=3, strides=1, padding='same')
 
-    self.block1 = InceptionBlock(filters_1x1=8, filters_3x3=12, filters_3x3_reduce=8, filters_5x5=12, filters_5x5_reduce=8, filters_pool_proj=12)
+    self.batchNorm = BatchNormalization()
+    self.maxPool = MaxPooling2D()
+    self.dropout = Dropout(0.1)
+
+    self.block1 = InceptionBlock(filters_1x1=8, filters_3x3=16, filters_3x3_reduce=8, filters_5x5=16, filters_5x5_reduce=8, filters_pool_proj=16)
 
     self.flatten = Flatten()
-    self.fc = Dense(128, activation='relu')
-    self.out = Dense(1, activation='sigmoid')  # or 'softmax' for multiclass
+    self.fc1 = Dense(128, activation='relu')
+    self.out = Dense(1, activation='sigmoid')
 
   def call(self, inputs):
-    x = self.conv7x7(inputs)
-    x = self.block1(x)
+    x = self.conv5x5_1(inputs)
+    x = self.batchNorm(x)
+    x = self.maxPool(x)
+
+    x = self.conv3x3_2(x)
+    x = self.maxPool(x)
+
+    x = self.conv3x3_3(x)
+
+    # x = self.block1(x)
 
     x = self.flatten(x)
-    x = self.fc(x)
+    x = self.fc1(x)
+    x = self.dropout(x)
     x = self.out(x)
     return x
   
   def summary(self):
-    x = Input(shape=(24, 24, 3))
-    model = keras.Model(inputs=[x], outputs=self.call(x))
+    x = Input(shape=(32, 32, 3))
+    model = Model(inputs=[x], outputs=self.call(x))
     return model.summary()
 
 if __name__ == '__main__':
   sub = MyModel()
   sub.summary()
 
-# Instantiate the model
 model = MyModel()
 
-# Compile the model
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='Adam', loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
+
+logdir = 'C:/ProjectIgnis/.py/logs'
+
+tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
 history = model.fit(
-  trainGen,
-  steps_per_epoch=trainGen.samples // trainGen.batch_size,
+  train,
   epochs=10,
-  validation_data=validGen,
-  validation_steps=validGen.samples // validGen.batch_size,
+  validation_data=val,
+  callbacks=[tensorboard_callback]
 )
 
-# Evaluate the model on the test set
-test_loss, test_accuracy = model.evaluate(
-  testGen,
-  steps=testGen.samples // testGen.batch_size,
-)
+fig = plt.figure()
+plt.plot(history.history['loss'], color='teal', label='Loss')
+plt.plot(history.history['val_loss'], color='salmon', label='Valodation Loss')
+fig.suptitle('Loss', fontsize=20)
+plt.legend(loc='upper right')
+plt.show()
 
-print(f"Test accuracy: {test_accuracy}")
+pre = Precision()
+re = Recall()
+acc = BinaryAccuracy()
 
-def get_predictions(model, generator):
-  generator.reset()
-  predictions = model.predict(generator, steps=np.ceil(generator.samples / generator.batch_size))
-  predicted_labels = (predictions > 0.5).astype(int).flatten()
-  true_labels = generator.classes
-  return predicted_labels, true_labels
+for batch in test.as_numpy_iterator():
+  X, y = batch
+  yhat = model.predict(X)
+  pre.update_state(y, yhat)
+  re.update_state(y, yhat)
+  acc.update_state(y, yhat)
 
-def calculate_metrics(predicted_labels, true_labels):
-  precision = precision_score(true_labels, predicted_labels)
-  recall = recall_score(true_labels, predicted_labels)
-  auc = roc_auc_score(true_labels, predicted_labels)
+print(f'Precision:{pre.result().numpy()}, Recall:{re.result().numpy()}, Acc:{acc.result().numpy()}')
 
-  print(f"Precision: {precision:.4f}")
-  print(f"Recall: {recall:.4f}")
-  print(f"AUC: {auc:.4f}")
+testInput0 = loadData(incdir0)
+testInput1 = loadData(incdir1)
+testInput404 = loadData(incdir404)
 
-predicted_labels, true_labels = get_predictions(model, testGen)
+def showPredict(inputs):
+  preds = []
+  for batch in inputs.as_numpy_iterator():
+    yhat = model.predict(batch)
+    for item in yhat:
+      if item >= .008:
+        item = 1
+      if item < .008:
+        item = 0
+      # else: print('How did you get here')
+      preds.append(item)
+  
+  return preds
 
-calculate_metrics(predicted_labels, true_labels)
+predsMask = showPredict(testInput0)
+predsNoMask = showPredict(testInput1)
+predsIncMask = showPredict(testInput404)
+
+def predPrint(preds):
+  if preds == predsMask:
+    print('-------- Predicted WITH Mask --------')
+  if preds == predsNoMask:
+    print('-------- Predicted NO Mask --------')
+  if preds == predsIncMask:
+    print('-------- Predicted INCORRECT USE Mask --------')
+
+  print('People with mask: ', preds.count(0))
+  print('People without mask: ', preds.count(1))
+  print('Accuracy Incorrect Use: ', preds.count(1) / (preds.count(0) + preds.count(1)))
+  
+predPrint(predsMask)
+predPrint(predsNoMask)
+predPrint(predsIncMask)
+
+zeros_list = [1] * len(predsIncMask)
+
+cm = confusion_matrix(zeros_list, predsIncMask)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+disp.plot()
+plt.show()

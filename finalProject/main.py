@@ -1,5 +1,3 @@
-import cv2
-import os
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -9,19 +7,19 @@ from keras.metrics import Precision, Recall, BinaryAccuracy, AUC
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
-file_dir = 'C:/ProjectIgnis/.py/data/Mask_DB'
+file_dir = 'C:\\Users\\arisp\Documents\\VsCode\\Repos\\U9J48\\finalProject\\Data\\Mask_DB'
 
-incdir0 = 'C:/ProjectIgnis/.py/data/Mask_DB/with_mask'
-incdir1 = 'C:/ProjectIgnis/.py/data/Mask_DB/without_mask'
-incdir404 = 'C:/ProjectIgnis/.py/data/mask_incorrect_use'
+incdir0 = 'C:\\Users\\arisp\\Documents\\VsCode\\Repos\\U9J48\\finalProject\\Data\\Mask_DB\\with_mask'
+incdir1 = 'C:\\Users\\arisp\\Documents\\VsCode\\Repos\\U9J48\\finalProject\\Data\\Mask_DB\\without_mask'
+incdir404 = 'C:\\Users\\arisp\\Documents\\VsCode\\Repos\\U9J48\\finalProject\\Data\\mask_incorrect_use'
 
 data = tf.keras.utils.image_dataset_from_directory(
   directory=file_dir,                                   # ----------- Reminder ------------ #
   image_size=(32, 32),                                  # Class0 = WITH Mask                #
-  seed=777,                                             # Class1 = NO Mask                  #  
+  seed=777,                                             # Class1 = NO Mask                  #
   batch_size=32,                                        # CLass404 = Incorrect Use of Mask  #
   shuffle=True,                                         # --------------------------------- #
-) 
+)
 
 def loadData(dataDir):
   data = tf.keras.utils.image_dataset_from_directory(
@@ -136,7 +134,7 @@ model = MyModel()
 
 model.compile(optimizer='Adam', loss=tf.losses.BinaryCrossentropy(), metrics=['accuracy'])
 
-logdir = 'C:/ProjectIgnis/.py/logs'
+logdir = 'C:\\Users\\arisp\\Documents\\VsCode\\Repos\\U9J48\\finalProject\\log'
 
 tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
@@ -144,7 +142,7 @@ history = model.fit(
   train,
   epochs=10,
   validation_data=val,
-  callbacks=[tensorboard_callback]
+  callbacks=[tensorboard_callback],
 )
 
 fig = plt.figure()
@@ -176,9 +174,9 @@ def showPredict(inputs):
   for batch in inputs.as_numpy_iterator():
     yhat = model.predict(batch)
     for item in yhat:
-      if item >= .008:
+      if item >= .0001:
         item = 1
-      if item < .008:
+      if item < .0001:
         item = 0
       # else: print('How did you get here')
       preds.append(item)
